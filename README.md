@@ -1,8 +1,12 @@
 # AI Engineering Notes
 
-A hands-on notebook for Python, LangGraph and production-oriented AI engineering. Based on DSwithBappy’s course and guided support-ticket labs. Explanations are original; receipts are sanitized historical learner outputs.
+A public teaching site for Python, LangGraph and production-oriented AI engineering. Twenty available chapters explain definitions, mental models, small code steps, runnable examples and self-check exercises for readers learning the topic for the first time. Based on DSwithBappy’s course and guided support-ticket labs. Explanations are original; receipts are sanitized historical learner outputs.
 
-Intended Pages URL after publication: https://usmanrangrez.github.io/ai-engineering-notes/
+Live teaching site: https://usmanrangrez.github.io/ai-engineering-notes/
+
+## Start learning
+
+Open [Start here](https://usmanrangrez.github.io/ai-engineering-notes/start.html) for prerequisites and setup. The [offline examples](examples/) make no model calls; [author verification receipts](examples/VERIFIED.md) distinguish new executed examples from historical learner runs. Planned chapters remain outlines.
 
 ## Current checkpoint
 Core LangSmith tracing complete. Tool calling in LangGraph is next. 11 of 18 original syllabus topics complete; the expanded roadmap is larger. Evaluation dataset/local metric introduced; experiments pending.
@@ -18,7 +22,9 @@ Open http://localhost:8000. GitHub Pages serves the generated site with relative
 
 ## Structure
 ```text
-chapters/              short Markdown source chapters
+chapters/              Markdown teaching chapters
+examples/              complete offline Python labs and verification receipts
+START.md               independent-reader setup and study guide
 chapters.json          order, status, course links and summaries
 assets/                shared CSS, JavaScript and favicon
 build.py               reusable static HTML generator

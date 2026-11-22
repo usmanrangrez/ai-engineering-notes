@@ -1,6 +1,70 @@
 ## What it is and why it matters
 Saving checkpoint state is insufficient if the application forgets which conversation IDs exist. Conversely, restoring a directory of titles does not restore RAM-only messages. Persist both responsibilities.
 
+## Learn from the beginning
+**Prerequisite:** conversation directories and SQLite checkpoints. Your goal is to identify which of two kinds of data survived a restart and prove both independently.
+
+### Concept 1 — Metadata and message state can have separate storage
+A **metadata record** describes a conversation: title, ID, owner, timestamps. **Graph state** contains its messages and workflow fields. Saving metadata does not automatically save messages, and saving messages does not automatically create your application's preferred titles.
+
+```text
+thread_directory.json --> IDs and titles
+thread_messages.sqlite --> graph checkpoints and message state
+             same thread ID joins the two responsibilities
+```
+
+In our first directory lab, a JSON file survived restart but InMemorySaver did not. The list could still display “Delayed headphones” while loading no old messages. That behavior was a missing durable-state backend, not proof that the directory failed to write.
+
+### Concept 2 — JSON is a representation, not a database transaction system
+```python
+import json
+from pathlib import Path
+
+path = Path("data/thread_directory.json")
+directory = json.loads(path.read_text()) if path.exists() else {}
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(json.dumps(directory, indent=2))
+```
+
+This is a small single-process serialization excerpt, not the complete directory manager. `json.dumps` produces JSON text; `json.loads` parses it. `read_text` and `write_text` handle the file. A Python dictionary in memory is different from the saved JSON text. A process can change the dictionary without having saved the change yet.
+
+A **transaction** groups database work under defined commit/rollback guarantees. A plain read-modify-write JSON sequence does not prevent another process from reading old contents and overwriting your update. Atomic replacement can reduce partial-file writes; it does not alone solve concurrent lost updates.
+
+### Concept 3 — Prove metadata and state with separate receipts
+| Check | What it proves | What it does not prove |
+| --- | --- | --- |
+| Restart and list three titles | Directory persisted | Old messages persisted |
+| Restart and load four messages for A | A's checkpoint state persisted | Every catalog entry is valid |
+| New chat has no messages | Fresh ID selects empty state | Old state was deleted |
+
+The durable version keeps SQLite open while reading/invoking the graph and uses the same IDs from the saved directory. It does not need to reconstruct messages by parsing terminal logs. The checkpointer is the application's state source for that graph history.
+
+## Build it in small pieces
+First test metadata-only restart without any model. Then use the SQLite lab from chapter 13 to write/read message state in separate processes. Finally compose those responsibilities: retrieve an ID from the directory and use it to load the matching saved graph state. File 20 in the historical receipt did that final proof with four restored messages.
+
+This lesson does not require memorizing SQL table definitions. It requires knowing which component owns which data and being able to diagnose a blank conversation. In a larger application, a database-backed conversation catalog can store ownership and titles separately from checkpointer-internal tables, even if both use the same database engine. Do not build app features by casually modifying checkpoint internals.
+
+## Check your understanding
+Predict whether a saved title is sufficient for an LLM to recall an order ID. It is not: the prompt must contain the restored message/state data relevant to the answer.
+
+::: question Exercise receipt: isolate a failure
+Keep the JSON catalog but temporarily use a fresh in-memory saver. Show titles exist and messages do not. Explain the mismatch before changing storage back.
+:::
+::: question Exercise receipt: restart rather than rerun in memory
+Exit the writer process, start a separate reader, and paste the restored four-message transcript with order IDs sanitized.
+:::
+
+
+## Self-check answer
+
+Try the exercise predictions before opening this explanation.
+
+::: question Explain the mechanism and check your prediction
+Titles surviving restart prove the metadata file persisted. Messages surviving a fresh process prove checkpoint durability. You need both for a useful restored chat list. A JSON file read-modify-write is not a concurrency-safe transactional catalog.
+:::
+
+## Historical learner lab record
+
 ## Lab 19: JSON directory
 ```python
 DIRECTORY_PATH = Path(__file__).resolve().parent / "data" / "thread_directory.json"

@@ -1,6 +1,78 @@
 ## What it is and why it matters
 Terminal START/DONE logs cannot show whether the model received the correct policy. LangSmith records instrumented operations so we can inspect exact input/output payloads, timing, reported usage, and errors.
 
+## Learn from the beginning
+**Prerequisite:** a graph with at least one node. Your goal is to diagnose a wrong answer by inspecting what actually ran and what input it received.
+
+### Concept 1 — Observability makes execution inspectable
+**Observability** is the ability to understand system behavior from emitted evidence. A **run** is one recorded operation. A **trace** is the tree of related runs for one request. A **span** is another common name for a timed operation within distributed tracing; in this site we use LangSmith's run terminology.
+
+```text
+support_ticket_reply          root graph run
+    draft_reply               node run
+        chat model            model run, prompts and response
+        count_reply_words     optional instrumented helper
+```
+
+The root's elapsed time includes its children. Do not add parent and child durations as though they were separate sequential waits. A trace helps answer whether the classifier selected the wrong category, whether the drafting prompt contained the policy, and which request was slow. It does not certify that the answer is correct.
+
+### Concept 2 — Instrumentation captures events and sends records
+**Instrumentation** is code that records operations. LangChain/LangGraph integrations hook into call start, completion, and errors. The LangSmith SDK packages and transmits telemetry to the configured endpoint. The SDK may already be installed as a transitive dependency: a package required by another installed package.
+
+```text
+Your process: graph + model client + tracing hooks
+                 |                      |
+                 | Groq request         | trace upload
+                 v                      v
+             model service         LangSmith service
+```
+
+These requests have different destinations and purposes. A model can return a valid answer while telemetry upload fails. Likewise, a trace can be successfully recorded for a node that raises an exception. Tracing does not add conversation persistence unless you separately configure it.
+
+The **endpoint** is the server address receiving trace records. Our lab used an EU LangSmith instance, so the configured API endpoint matched that region. A label such as `local` describes the trace environment; it does not deploy the code. Configure one supported destination style rather than combining legacy project settings with agent addressing.
+
+### Concept 3 — Labels make runs comparable
+A **run name** gives a readable label. **Tags** are filterable labels such as delivery. **Metadata** stores structured attributes such as prompt_version or test_case. None of these modifies the model prompt by itself.
+
+```python
+trace_config = {
+    "run_name": "support_ticket_reply",
+    "tags": ["delivery", "teaching-lab"],
+    "metadata": {"prompt_version": "v1", "test_case": "late_parcel"},
+}
+result = graph.invoke(initial_state, config=trace_config)
+```
+
+LangSmith thread grouping connects related traces; graph checkpointer thread IDs select saved state. A request can be grouped in a trace thread while the application remains stateless. Keep those two mechanisms separate when debugging apparent memory.
+
+## Build it in small pieces
+First run a known-good graph locally. Then enable tracing and verify one root trace. Open the node, then the model child, and inspect the actual system/human messages. Add a meaningful run name and tags only after the first trace is visible. Next deliberately reject an empty ticket before the model call; verify the failed node is visible and no successful model call is falsely implied.
+
+For ordinary Python helpers, `@traceable` adds instrumentation around the function call; it does not register a graph node or create an edge. Put it on meaningful operations rather than every trivial expression. The historical lab below provides configuration and the observed helper output.
+
+**Privacy controls affect what is recorded, not necessarily what the application processes.** Hiding trace input/output does not remove data from the model prompt, old traces, metadata, or terminal logs. Inspect each surface independently. A token count or displayed cost estimate is operational telemetry, not a billing invoice.
+
+## Check your understanding
+Before triggering the empty-ticket case, predict which runs should exist: root and failed node, but no completed model request after the guard. Compare the recorded trajectory.
+
+::: question Exercise receipt: prove the prompt
+Open a model child run and identify the supplied policy instruction. Report a sanitized sentence, not an API key or private customer payload.
+:::
+::: question Exercise receipt: separate storage from telemetry
+Explain how two grouped trace turns could still fail to remember the first order ID. Name the missing application component.
+:::
+
+
+## Self-check answer
+
+Try the exercise predictions before opening this explanation.
+
+::: question Explain the mechanism and check your prediction
+The empty-input guard creates a failed node before a successful model call can occur. Inspect actual prompt messages on the model child run. Thread grouping in LangSmith organizes telemetry; without a graph checkpointer or explicit history, it does not supply conversational memory.
+:::
+
+## Historical learner lab record
+
 | Term | Meaning |
 | --- | --- |
 | Run | One recorded operation, such as a node or model call |
@@ -140,3 +212,5 @@ It did not. That earlier structured-output response varied across model calls; a
 - [Threads](https://docs.langchain.com/langsmith/threads)
 - [Custom instrumentation](https://docs.langchain.com/langsmith/annotate-code)
 - [Payload controls](https://docs.langchain.com/langsmith/mask-inputs-outputs)
+
+- [LangSmith tracing quickstart](https://docs.langchain.com/langsmith/observability-quickstart)

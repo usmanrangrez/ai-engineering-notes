@@ -3,7 +3,7 @@
 ## What this notebook is
 Topic: AI engineering with Python, LangChain, LangGraph, LangSmith, and later tools/RAG/MCP/deployment. Learning goal: practical preparation for working-student or junior AI engineering work. The main capstone is a recruitment agent.
 
-The course backbone is DSwithBappy’s Complete Agentic AI Course. These are original explanatory notes from guided work, not a copied transcript or an official course publication.
+The course backbone is DSwithBappy’s Complete Agentic AI Course. These are original teaching chapters based on guided work, not a copied transcript or an official course publication. New readers can learn from the explanations, runnable offline examples and answer keys before studying the historical receipts.
 
 ## Read versus Planned
 Read means the topic has been studied and documented in this learning record. A chapter can still state that evidence was inherited from an earlier handoff or only part of the implementation was completed. Planned means no completed lab is claimed. Notes chapters are finer-grained than the original 18-topic syllabus and are not video numbers.
@@ -11,7 +11,7 @@ Read means the topic has been studied and documented in this learning record. A 
 ## Lab receipts
 Documented lab receipts were run by hand by the learner and pasted into the tutoring conversation. Long traces are labeled excerpts; whitespace is normalized where needed. Historical timings, scores, token counts, costs, and model responses are observations rather than promises of reproducibility.
 
-Async's original terminal receipt was not retained, so that gap is stated. Brief Python snippets may be reconstructions or excerpts, not independently runnable full projects. Planned chapters never contain fabricated outputs. Tutor-only offline verification is not presented as a learner's live model call.
+Async's original terminal receipt was not retained, so that gap is stated. Brief Python snippets may be reconstructions or excerpts. Complete reconstructed offline files are supplied under examples/; the notes author executed 17 of them while expanding the site and recorded actual outputs in examples/VERIFIED.md. These author runs are not presented as new learner accomplishments. The public start guide explains setup. No new paid LLM call was made for this expansion. Planned chapters never contain fabricated outputs. Tutor-only offline verification is not presented as a learner's live model call.
 
 ## Privacy and sanitization
 Personal file paths, account/workspace/project identifiers, message UUIDs, business order identifiers, email addresses, credentials, and private dashboard links are replaced with placeholders. The repository owner in GitHub links is public repository routing, explicitly approved for this site. No .env, database, private transcript, or raw screenshot is included.

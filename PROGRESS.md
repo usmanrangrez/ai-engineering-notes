@@ -105,10 +105,15 @@ Backend coverage through numbered video 18 / chatbot Part 6 is complete. Next is
 - Dataset two examples visible; local evaluator true/false. Full experiment pending.
 
 ## Environment record
-Use Python and uv in the learner's existing AgenticAI project. Public notes use <PROJECT_ROOT>; no real local path is required. Historical receipts span Python 3.14.4–3.14.6. At the successful LangSmith checkpoint: langchain-core 1.8.4, langsmith 0.16.0, langchain-groq 1.2.1. These are observed versions, not globally pinned latest requirements. The working model was Groq openai/gpt-oss-120b with reasoning_effort=low. Historical qwen reviewer availability is unverified.
+Use Python and uv in the learner's existing AgenticAI project. Public notes use <PROJECT_ROOT>; no real local path is required. Historical receipts span Python 3.14.4–3.14.6. At the successful LangSmith checkpoint: langchain-core 1.8.4, langsmith 0.16.0, langchain-groq 1.2.1. These are observed versions, not globally pinned latest requirements. The working model was Groq openai/gpt-oss-120b with reasoning_effort=low. The historical qwen reviewer is listed as preview in Groq’s catalog checked on 2026-11-22; its current options/tool behavior were not live-tested during the notes expansion.
 
 ## Preferences
 Read TEACHING.md. One action per teaching message; small steps; prediction before tests; receipts before advancing; complete files on request; explanation before code; direct respectful language; backend first; distinguish Bappy coverage from additions.
 
+## Public teaching expansion
+All 20 studied chapters now include first-time explanations, defined terms, three core concepts, small-step code guidance, exercises and self-check answers. Seventeen reconstructed offline examples were run by the notes author, including SQLite writer/reader in separate processes. Their real outputs are recorded separately from historical learner receipts. This editorial expansion does not mark any future lesson complete. A Start here guide supports independent readers.
+
 ## Publication
 Public repository name approved: usmanrangrez/ai-engineering-notes. The learner approved the initial commit, push to main, and GitHub Pages publication on 2026-11-22. This approval covers the prepared first publication only; ask again before later commits and pushes. Verify the remote commit and live deployment before reporting success.
+
+On 2026-11-22 the learner explicitly authorized the teaching-expansion update to be committed and published while they are away. This applies to this requested expansion; later unrelated publications still require approval.
