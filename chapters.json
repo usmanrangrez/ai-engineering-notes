@@ -126,8 +126,8 @@
     "title": "Persistence, snapshots, and history",
     "summary": "Understand thread IDs, get_state(), get_state_history(), and saved execution boundaries.",
     "group": "Runtime capabilities",
-    "status": "Read",
-    "coverage": "Completed hands-on",
+    "status": "Planned",
+    "coverage": "Marked undone for proper hands-on redo (historical notes preserved)",
     "course_url": "https://www.youtube.com/watch?v=5uRVlHTXr0E&t=0s",
     "course_label": "Bappy lesson 14 \u00b7 video start 00:00"
   },
@@ -137,8 +137,8 @@
     "title": "SQLite persistence across restarts",
     "summary": "Keep the database path stable and the connection open during graph access.",
     "group": "Runtime capabilities",
-    "status": "Read",
-    "coverage": "Completed hands-on",
+    "status": "Planned",
+    "coverage": "Marked undone for proper hands-on redo (historical notes preserved)",
     "course_url": "https://www.youtube.com/playlist?list=PLkz_y24mlSJZ9SFlc9O4Q4Grli5SQDbrB",
     "course_label": "Course playlist \u00b7 lesson 17; exact timestamp unverified"
   },
@@ -148,8 +148,8 @@
     "title": "Recovery, continuation, and replay",
     "summary": "None means no new input; the checkpoint address determines what continues.",
     "group": "Runtime capabilities",
-    "status": "Read",
-    "coverage": "Tutor extension, learner-run recovery lab",
+    "status": "Planned",
+    "coverage": "Marked undone for proper hands-on redo (historical notes preserved)",
     "course_url": "https://www.youtube.com/playlist?list=PLkz_y24mlSJZ9SFlc9O4Q4Grli5SQDbrB",
     "course_label": "Course playlist \u00b7 lesson 14; exact timestamp unverified"
   },
@@ -159,8 +159,8 @@
     "title": "Edit messages and fork a checkpoint",
     "summary": "Replace a message by ID and regenerate from the right execution boundary.",
     "group": "Runtime capabilities",
-    "status": "Read",
-    "coverage": "Tutor extension, learner-run edit lab",
+    "status": "Planned",
+    "coverage": "Marked undone for proper hands-on redo (historical notes preserved)",
     "course_url": "https://www.youtube.com/playlist?list=PLkz_y24mlSJZ9SFlc9O4Q4Grli5SQDbrB",
     "course_label": "Course playlist \u00b7 lesson 14; exact timestamp unverified"
   },
@@ -225,10 +225,10 @@
     "title": "Tool calling in LangGraph",
     "summary": "Follow a model-requested operation through validation, execution, and ToolMessage return.",
     "group": "Tools and agents",
-    "status": "Planned",
-    "coverage": "Not started; scope only",
-    "course_url": "https://www.youtube.com/playlist?list=PLkz_y24mlSJZ9SFlc9O4Q4Grli5SQDbrB",
-    "course_label": "Course playlist \u00b7 lesson 19; exact timestamp unverified"
+    "status": "Read",
+    "coverage": "Completed hands-on",
+    "course_url": "https://www.youtube.com/watch?v=pkwVn8ZtRvE&t=0s",
+    "course_label": "Bappy lesson 19 \u00b7 video start 00:00"
   },
   {
     "number": 22,
@@ -236,10 +236,10 @@
     "title": "Build the model\u2013tool loop",
     "summary": "Understand the explicit ReAct-style loop before comparing a standard agent abstraction.",
     "group": "Tools and agents",
-    "status": "Planned",
-    "coverage": "Not started; scope only",
-    "course_url": "https://www.youtube.com/playlist?list=PLkz_y24mlSJZ9SFlc9O4Q4Grli5SQDbrB",
-    "course_label": "Course playlist \u00b7 lesson 19; exact timestamp unverified"
+    "status": "Read",
+    "coverage": "Completed hands-on",
+    "course_url": "https://www.youtube.com/watch?v=pkwVn8ZtRvE&t=0s",
+    "course_label": "Bappy lesson 19 \u00b7 video start 00:00"
   },
   {
     "number": 23,
@@ -247,8 +247,8 @@
     "title": "RAG in LangGraph",
     "summary": "Build document retrieval as a tool inside the graph, not as an unrelated detour.",
     "group": "Tools and agents",
-    "status": "Planned",
-    "coverage": "Not started; scope only",
+    "status": "Read",
+    "coverage": "Completed hands-on (with interactive visuals)",
     "course_url": "https://www.youtube.com/watch?v=p5U6uX7LDE8&t=0s",
     "course_label": "Bappy lesson 20 \u00b7 video start 00:00"
   },
