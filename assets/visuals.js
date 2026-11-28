@@ -472,6 +472,94 @@
     render();
   }
 
+  /* 10. Tool Calling Protocol (Ch 21) */
+  function mountToolCallingProtocol(root) {
+    const steps = [
+      {
+        tab: '1. Schema sent',
+        who: 'LangChain → LLM API',
+        c: 'var(--accent)',
+        left: '@tool\ndef get_order_status(order_id: str) -> str:\n    """Return shipping status for order_id."""\n    return DB.get(order_id, "NOT_FOUND")',
+        right: 'JSON Schema attached to API request:\n{\n  "name": "get_order_status",\n  "description": "Return shipping status...",\n  "parameters": {\n    "order_id": {"type": "string"}\n  }\n}',
+        foot: '<strong>Step 1 — bind_tools sends a JSON schema:</strong> The LLM never sees your Python implementation. It only reads the tool name, parameter types, and docstring.'
+      },
+      {
+        tab: '2. LLM requests',
+        who: 'Chat Model (Groq)',
+        c: 'var(--v-warn)',
+        left: 'HumanMessage:\n"Where is order ORD-42?"',
+        right: 'AIMessage(\n  content="",\n  tool_calls=[{\n    "name": "get_order_status",\n    "args": {"order_id": "ORD-42"},\n    "id": "call_101"\n  }]\n)',
+        foot: '<strong>Step 2 — Model emits a structured request:</strong> The LLM does NOT run Python. It stops with <code>finish_reason="tool_calls"</code> and asks your app to run <code>get_order_status("ORD-42")</code>.'
+      },
+      {
+        tab: '3. ToolNode runs',
+        who: 'LangGraph ToolNode',
+        c: 'var(--v-alt)',
+        left: 'Python executes:\nget_order_status(order_id="ORD-42")\n-> returns "IN_TRANSIT"',
+        right: 'ToolMessage(\n  content="IN_TRANSIT",\n  name="get_order_status",\n  tool_call_id="call_101"  # MUST match!\n)',
+        foot: '<strong>Step 3 — Execution & ID matching:</strong> <code>ToolNode</code> runs your Python function and wraps its string return in a <code>ToolMessage</code> linked by the exact <code>tool_call_id</code>.'
+      },
+      {
+        tab: '4. Grounded reply',
+        who: 'Chat Model (#2)',
+        c: 'var(--v-ok)',
+        left: 'state["messages"] sent to LLM:\n[0] HumanMessage\n[1] AIMessage(tool_calls)\n[2] ToolMessage("IN_TRANSIT")',
+        right: 'AIMessage(\n  content="Order ORD-42 is currently IN_TRANSIT.",\n  tool_calls=[]\n)  -> tools_condition routes to END',
+        foot: '<strong>Step 4 — Second LLM call finishes:</strong> Reading the <code>ToolMessage</code>, the LLM writes the final user-facing reply with empty <code>tool_calls=[]</code>, ending the graph.'
+      }
+    ];
+    let cur = 0;
+    function render() {
+      const s = steps[cur];
+      root.innerHTML = `
+        <div class="v-bar">
+          <div class="v-tabs">${steps.map((st, i) => `<button type="button" class="v-btn ${i === cur ? 'active' : ''}" data-i="${i}">${esc(st.tab)}</button>`).join('')}</div>
+          <div class="v-tabs"><span class="v-badge" style="color:${s.c};border-color:${s.c}">${esc(s.who)}</span><button type="button" class="v-btn" data-d="-1" ${cur === 0 ? 'disabled' : ''}>Prev</button><button type="button" class="v-btn" data-d="1" ${cur === 3 ? 'disabled' : ''}>Next</button></div>
+        </div>
+        <div class="v-grid">
+          <div class="v-code" style="white-space:pre-wrap">${esc(s.left)}</div>
+          <div class="v-code" style="white-space:pre-wrap;border-color:${s.c}">${esc(s.right)}</div>
+        </div>
+        <div class="v-foot">${s.foot}</div>`;
+      root.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => { cur = Number(b.dataset.i); render(); }));
+      root.querySelectorAll('[data-d]').forEach(b => b.addEventListener('click', () => { cur = Math.max(0, Math.min(3, cur + Number(b.dataset.d))); render(); }));
+    }
+    render();
+  }
+
+  /* 11. ReAct Multi-Hop Loop Trace (Ch 22) */
+  function mountReactLoopTrace(root) {
+    const steps = [
+      { tab: '1. Call #1', used: 0, enabled: true, msg: 'HumanMessage: "What is the shipment status of ORD-42?"', out: 'AIMessage -> tool_calls=[get_tracking_number("ORD-42")]', foot: '<strong>Reason #1:</strong> Model realizes it needs a tracking number first (used=0/2, tools_enabled=True).' },
+      { tab: '2. Tool #1', used: 1, enabled: true, msg: 'ToolNode runs get_tracking_number("ORD-42")', out: 'ToolMessage("TRK-8317") appended to state["messages"]', foot: '<strong>Observe #1:</strong> The real value <code>TRK-8317</code> enters state—never hardcoded.' },
+      { tab: '3. Call #2', used: 1, enabled: true, msg: 'Model reads "TRK-8317" from state["messages"]', out: 'AIMessage -> tool_calls=[get_shipment_status("TRK-8317")]', foot: '<strong>Reason #2:</strong> Model feeds Tool 1’s output directly as Tool 2’s input (used=1/2, tools_enabled=True).' },
+      { tab: '4. Tool #2', used: 2, enabled: false, msg: 'ToolNode runs get_shipment_status("TRK-8317")', out: 'ToolMessage("IN_TRANSIT") appended to state["messages"]', foot: '<strong>Observe #2:</strong> Tool budget reached (<code>used=2/2</code>) — next model call switches to plain <code>llm</code>.' },
+      { tab: '5. Call #3 (END)', used: 2, enabled: false, msg: 'tools_enabled=False -> plain llm.invoke(messages)', out: 'AIMessage("Order ORD-42 (TRK-8317) is IN_TRANSIT.") -> END', foot: '<strong>Clean stop:</strong> 3 LLM calls, 2 dependent tools, 6 messages total — stopped cleanly by budget, not a recursion crash.' }
+    ];
+    let cur = 0;
+    function render() {
+      const s = steps[cur];
+      root.innerHTML = `
+        <div class="v-bar">
+          <div class="v-tabs">${steps.map((st, i) => `<button type="button" class="v-btn ${i === cur ? 'active' : ''}" data-i="${i}">${esc(st.tab)}</button>`).join('')}</div>
+          <div class="v-tabs">
+            <span class="v-badge">tool_results=${s.used}/2</span>
+            <span class="v-badge" style="color:${s.enabled ? 'var(--v-ok)' : 'var(--v-warn)'};border-color:${s.enabled ? 'var(--v-ok)' : 'var(--v-warn)'}">tools_enabled=${s.enabled}</span>
+            <button type="button" class="v-btn" data-d="-1" ${cur === 0 ? 'disabled' : ''}>Prev</button>
+            <button type="button" class="v-btn" data-d="1" ${cur === 4 ? 'disabled' : ''}>Next</button>
+          </div>
+        </div>
+        <div class="v-grid">
+          <div class="v-card"><div class="v-meta">Input to this step</div><div class="v-mono" style="margin-top:6px">${esc(s.msg)}</div></div>
+          <div class="v-card" style="border-color:var(--accent)"><div class="v-meta">Output produced</div><div class="v-mono" style="margin-top:6px;color:var(--accent)">${esc(s.out)}</div></div>
+        </div>
+        <div class="v-foot">${s.foot}</div>`;
+      root.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => { cur = Number(b.dataset.i); render(); }));
+      root.querySelectorAll('[data-d]').forEach(b => b.addEventListener('click', () => { cur = Math.max(0, Math.min(4, cur + Number(b.dataset.d))); render(); }));
+    }
+    render();
+  }
+
   const registry = {
     'rag-embedding-plot': mountEmbeddingPlot,
     'rag-two-table-retriever': mountTwoTableRetriever,
@@ -481,7 +569,9 @@
     'persistence-time-travel': mountTimeTravel,
     'streaming-modes': mountStreamingModes,
     'hitl-vs-input': mountHitlVsInput,
-    'hitl-pause-resume': mountHitlPauseResume
+    'hitl-pause-resume': mountHitlPauseResume,
+    'tool-calling-protocol': mountToolCallingProtocol,
+    'react-loop-trace': mountReactLoopTrace
   };
 
   document.querySelectorAll('.visual-box[data-visual]').forEach(el => {
