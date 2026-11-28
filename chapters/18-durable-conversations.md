@@ -1,6 +1,14 @@
 ## What it is and why it matters
 Saving checkpoint state is insufficient if the application forgets which conversation IDs exist. Conversely, restoring a directory of titles does not restore RAM-only messages. Persist both responsibilities.
 
+::: concept Prove BOTH layers survive a fresh process
+A restart test is only valid when you verify two separate facts in a **new Python process**: (1) the sidebar catalog still lists your conversation IDs and titles, and (2) `graph.get_state(config)` restores the actual `HumanMessage` / `AIMessage` history from SQLite/Postgres.
+:::
+
+::: warning Plain JSON files are not concurrency-safe databases
+A JSON directory file works fine for single-user local labs, but concurrent HTTP requests doing read-modify-write can overwrite each other. In production FastAPI apps, store the conversation catalog in PostgreSQL alongside (but logically separate from) LangGraph's checkpoint tables.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** conversation directories and SQLite checkpoints. Your goal is to identify which of two kinds of data survived a restart and prove both independently.
 

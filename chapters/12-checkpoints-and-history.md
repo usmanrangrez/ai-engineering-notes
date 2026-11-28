@@ -1,6 +1,17 @@
 ## What it is and why it matters
 The chatbot cannot answer a follow-up about an order ID unless previous messages are restored. A checkpointer saves graph state by thread and by execution boundary.
 
+::: concept The 4 superpowers unlocked by Persistence
+1. **Short-term memory:** multi-turn conversations isolated per `thread_id`.
+2. **Fault tolerance:** crash at Step 2 → resume from Step 2 via `invoke(None, config)` without redoing Step 1.
+3. **Human-in-the-Loop:** durable pausing at `interrupt()` and waking via `Command(resume=...)` (Chapter 24).
+4. **Time travel & forking:** inspect every intermediate super-step (`get_state_history`) and branch timelines (`update_state`).
+:::
+
+::: warning `get_state` is a read—`thread_id` is NOT authorization
+Calling `graph.get_state(config)` reads saved snapshots without calling the LLM. Always verify that the authenticated user owns `thread_id` before loading or invoking a thread in production.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** message reducers from chapter 11. Your goal is to explain the path from an incoming follow-up to a restored conversation without saying “the model remembers.”
 
@@ -62,7 +73,7 @@ Print len(snapshot.values["messages"]) for the latest snapshot, then the number 
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/12_persistence.py). Run from the repository root:
 

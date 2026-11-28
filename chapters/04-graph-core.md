@@ -1,6 +1,14 @@
 ## What it is and why it matters
 A collection of functions is not enough to specify which ones may run next or what state they receive. A graph makes that control flow explicit.
 
+::: mental-model Drawing the map (`compile`) vs. Walking the map (`invoke`)
+`StateGraph(State)`, `add_node()`, `add_edge()`, and `compile()` **only draw and validate the map**—zero node functions run during setup. Execution only begins when you call `graph.invoke(initial_state)`, which steps through super-steps, merges each node's partial `dict` update into `state`, and stops at `END`.
+:::
+
+::: warning Always return partial updates—never mutate `state` in place
+If `state` holds `{"ticket": "Late parcel"}` and `classify` returns `{"category": "delivery"}`, LangGraph merges them into `{"ticket": "Late parcel", "category": "delivery"}`. Mutating `state` directly bypasses reducers, breaks checkpointing, and creates subtle parallel bugs.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** Python functions that accept and return dictionaries. Your goal is to predict the state passed to each function before running a graph.
 
@@ -66,7 +74,7 @@ Read `state["category"]` before it has been produced. Paste the error type and e
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/04_graph_core.py). Run from the repository root:
 

@@ -1,6 +1,15 @@
 ## What it is and why it matters
 Restarting Python destroys RAM-only checkpoints. A SQLite checkpointer writes graph checkpoints to a local database file so another process can restore them later.
 
+::: mental-model Unsaved Notepad (`InMemorySaver`) vs. Saved File (`SqliteSaver`)
+`InMemorySaver` lives in Python RAM—the moment the process exits, every checkpoint vanishes. `SqliteSaver` writes serialized snapshots to a `.sqlite` file on disk so a brand-new Python process can immediately load the exact saved state with **0 nodes executed**.
+:::
+
+::: warning Keep two rules straight for `SqliteSaver`
+1. Anchor the path with `Path(__file__).with_name(...)` so changing terminal folders never creates a blank second database.
+2. Keep every `invoke()`, `stream()`, and `get_state()` call **inside** the `with SqliteSaver.from_conn_string(...) as checkpointer:` block so the connection stays open.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** in-memory checkpointing. Your goal is to demonstrate persistence across two separate Python processes, rather than just between two calls in one process.
 
@@ -55,7 +64,7 @@ Run from another working directory. Does a path based on __file__ change? Explai
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/13_sqlite.py). Run from the repository root:
 

@@ -1,6 +1,14 @@
 ## What it is and why it matters
 Editing an order ID after the model answered should regenerate the answer using the correction. Merely changing the last completed state does not necessarily schedule the chat node again.
 
+::: mental-model Time-travel forking works like `git branch`
+Calling `graph.update_state(past_snap.config, new_values)` **never deletes** the old checkpoints—it creates a new child checkpoint branching off `past_snap`'s `checkpoint_id` (which is why our live run grew from `4` checkpoints to `7`). Invoking `graph.invoke(None, config=fork_config)` then executes forward along the new branch.
+:::
+
+::: warning Replace vs. Append in `MessagesState`
+With `add_messages`, passing a `HumanMessage` with the **same `id`** replaces that message; omitting the `id` (or creating a fresh ID) **appends** a second message instead.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** message IDs, checkpoints, and replay. Your goal is to edit one message and regenerate only the response that depends on the corrected conversation.
 
@@ -60,7 +68,7 @@ Paste original human ID and replacement ID as placeholders, plus the two differe
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/15_edit.py). Run from the repository root:
 

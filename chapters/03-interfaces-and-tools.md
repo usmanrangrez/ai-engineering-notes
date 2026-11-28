@@ -1,6 +1,17 @@
 ## What it is and why it matters
 A model wrapper, a tool, and a graph can all expose `invoke()`. The shared method name does not mean they perform the same work.
 
+::: concept Clear separation of the 4 ecosystem layers
+- **Model provider (Groq, Google, OpenAI):** hosts neural network inference over HTTP.
+- **LangChain (`langchain-core`):** standardizes models, messages (`HumanMessage`/`AIMessage`), `@tool` schemas, and the `Runnable` interface.
+- **LangGraph:** orchestrates stateful control flow—nodes, edges, cycles, checkpoints, streaming, and `interrupt()`.
+- **LangSmith:** observes, traces, and evaluates runs without changing application control flow.
+:::
+
+::: warning Calling `tool.invoke(...)` directly is NOT an agent
+When your Python code calls `lookup_policy.invoke({"category": "delivery"})`, *your code* chose the tool. In an agent (Chapters 21–22), the **LLM** requests the tool via `AIMessage.tool_calls`, and your runtime validates and executes it.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** chapter 2's distinction between annotations and runtime validation. Your goal is to identify who chooses an operation, who executes it, and what a returned object contains.
 
@@ -63,7 +74,7 @@ In our sequential policy lookup, did the model request the tool directly, or did
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/03_tools.py). Run from the repository root:
 

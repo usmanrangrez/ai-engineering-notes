@@ -1,6 +1,14 @@
 ## What it is and why it matters
 Terminal START/DONE logs cannot show whether the model received the correct policy. LangSmith records instrumented operations so we can inspect exact input/output payloads, timing, reported usage, and errors.
 
+::: concept Trace Tree = Root Graph Run → Node Runs → Model / `@traceable` Child Runs
+Durations in a LangSmith trace are **nested, not additive**: the root graph duration already includes its child node and LLM call durations. Use `@traceable` to observe plain Python helpers without turning them into graph nodes.
+:::
+
+::: warning Telemetry thread grouping is NOT conversational memory
+Setting `metadata={"thread_id": ...}` groups related traces visually in LangSmith, but does **not** give your graph memory—only a LangGraph checkpointer (`configurable.thread_id`) restores state across turns. Similarly, `LANGSMITH_HIDE_INPUTS=true` hides payloads in trace storage, not from the LLM prompt or terminal logs.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** a graph with at least one node. Your goal is to diagnose a wrong answer by inspecting what actually ran and what input it received.
 

@@ -1,6 +1,14 @@
 ## What it is and why it matters
 A polite reply can still approve an unauthorized refund. Independent tone and policy reviews expose different defects. An average score can hide a critical failure.
 
+::: warning Never hide a mandatory policy gate inside an average score
+In our live lab, a reply scored **Tone = 9/10** and **Policy = 0/10** (because it falsely promised an unauthorized refund). A naive mean hides critical violations behind polite wording—always enforce **hard boolean gates** for policy/safety criteria, and use averages only as secondary quality telemetry.
+:::
+
+::: tip Always tag parallel review items with their `criterion`
+Parallel branches finish in non-deterministic wall-clock order. Include `{"criterion": "policy", ...}` inside every reducer-merged review dict so downstream aggregation never relies on fragile list positions (`reviews[0]` vs. `reviews[1]`).
+:::
+
 ## Learn from the beginning
 **Prerequisite:** reducers, siblings, and Pydantic contracts. Your goal is to distinguish successful aggregation from a trustworthy approval decision.
 

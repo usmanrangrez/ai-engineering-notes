@@ -1,6 +1,14 @@
 ## What it is and why it matters
 An agent waits on model APIs, search services, tools, and databases. Async Python lets one execution context do other work while an awaited I/O operation is waiting. It does not automatically make CPU work faster.
 
+::: mental-model One chef juggling multiple ovens (Concurrency vs. Parallelism)
+**Concurrency** is one chef putting a cake in Oven A, then immediately prepping dough for Oven B while Oven A bakes—overlapping wait times on a single thread. **Parallelism** is hiring two chefs to chop vegetables simultaneously on two CPU cores. AI agents spend 95%+ of their time waiting on network I/O (LLM APIs, vector DBs, HTTP tools), which is why async concurrency slashes total latency.
+:::
+
+::: warning Never call blocking I/O inside `async def`
+Putting `time.sleep(2)` or synchronous `requests.get(...)` inside an `async def` function freezes the entire event loop—no other coroutines can run until it finishes. Always use async-native libraries (`asyncio.sleep`, `httpx.AsyncClient`, LangChain's `ainvoke`/`astream`).
+:::
+
 ## Learn from the beginning
 **Prerequisite:** ordinary Python functions and function calls. No AI library is needed here. Your goal is to explain why two network requests can overlap without pretending that Python runs every instruction simultaneously.
 
@@ -55,7 +63,7 @@ Can drafting a policy-compliant reply start before the required policy has been 
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/01_async.py). Run from the repository root:
 

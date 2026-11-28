@@ -1,6 +1,17 @@
 ## What it is and why it matters
 A successful graph trace does not establish a good answer. Evaluation compares an application's output with specified criteria on known cases.
 
+::: concept The 4 pillars of Systematic Evaluation
+1. **Dataset:** curated input cases + reference expectations (including tricky/adversarial edge cases).
+2. **Target:** the versioned graph or prompt being tested.
+3. **Evaluator:** deterministic Python check or LLM-judge rubric scoring each output.
+4. **Experiment:** running a target across the full dataset to catch **regressions** before shipping a prompt or model change.
+:::
+
+::: warning Beware False Positives and False Negatives
+A phrase-presence check (`"order id" in reply.lower()`) passes `"Please provide your order ID. Your refund is approved."` (**false positive** — unsafe reply passes!) and fails `"Please share your purchase number"` (**false negative** — good paraphrase fails!). Always name metrics honestly after what they actually measure.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** inspecting traces and ordinary Python checks. Your goal is to say exactly what a metric measures and what evidence would be needed before claiming an improvement.
 
@@ -52,7 +63,7 @@ Describe what tracing one production request tells you and what running the same
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/20_evaluator.py). Run from the repository root:
 

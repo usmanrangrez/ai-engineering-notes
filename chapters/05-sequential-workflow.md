@@ -1,6 +1,14 @@
 ## What it is and why it matters
 Drafting before retrieving policy can produce unsupported promises. A sequential workflow enforces the dependency: the next node runs after its predecessor's update is available.
 
+::: concept Data dependencies dictate edges
+Draw an edge `A → B` whenever Node `B` cannot safely compute its output until Node `A` commits its state key (`classify → retrieve_policy → draft_reply`). Notice that putting a key in `state` does **not** automatically send it to the LLM—your drafting node must explicitly format `state["policy"]` into the model prompt.
+:::
+
+::: warning Valid graph execution does not prevent upstream classification mistakes
+If `classify` mislabels an undelivered parcel as `"refund"` instead of `"delivery"`, every downstream edge runs cleanly while grounding the reply in the **wrong policy**. Separate `issue_category` (what happened) from `requested_action` (what the user asked for).
+:::
+
 ## Learn from the beginning
 **Prerequisite:** state updates and graph construction from chapter 4. Your goal is to know when a fixed ordering is sufficient and when it forces unnecessary work.
 
@@ -60,7 +68,7 @@ Should two independent quality reviews be added one after another just because t
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/05_sequential.py). Run from the repository root:
 

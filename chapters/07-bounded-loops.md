@@ -1,6 +1,15 @@
 ## What it is and why it matters
 A reply can exceed the required word limit. One repair call might still be too long, so send it back to a deterministic checker. Unbounded repetition spends tokens without guaranteeing progress.
 
+::: concept Two separate safety bounds: Business Counter vs. Runtime `recursion_limit`
+- **Business counter (`attempts < max_repairs`):** checked in your router *after* the success check—produces a clean, normal exit with an explicit `unresolved` status when exhausted.
+- **`config={"recursion_limit": 20}`:** LangGraph's hard runtime super-step ceiling—raises `GraphRecursionError` to catch infinite-loop bugs.
+:::
+
+::: warning Stopping because a budget ran out is NOT approval
+Always check the **success condition before the budget-exhausted condition**, and record an explicit failure/escalation flag when exiting on budget exhaustion so an invalid draft is never mistaken for an approved reply.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** conditional edges. Your goal is to distinguish an acceptable result from a workflow that merely stopped consuming resources.
 
@@ -53,7 +62,7 @@ Temporarily set recursion_limit to one, catch GraphRecursionError, and paste its
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/07_bounded.py). Run from the repository root:
 

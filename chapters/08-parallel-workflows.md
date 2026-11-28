@@ -1,6 +1,14 @@
 ## What it is and why it matters
 Word counting and character counting both need the reply but do not need each other. They can run as sibling nodes. A combining node must wait for all the results it requires.
 
+::: mental-model Super-step snapshots: siblings read the same frozen photo
+Every sibling node in a parallel fan-out reads the **exact same committed state snapshot** from the start of the super-step. Even if Branch A finishes 200ms before Branch B, Branch B cannot read Branch A's update until the super-step boundary commits both writes.
+:::
+
+::: warning Concurrent writes to the same key require a Reducer
+If two parallel nodes both return `{"events": [...]}` without a reducer (`Annotated[list[str], operator.add]`), LangGraph raises `InvalidUpdateError`. And with a reducer, each branch must return only its **new delta** (`["words checked"]`), never `state["events"] + ["words checked"]` (which duplicates history).
+:::
+
 ## Learn from the beginning
 **Prerequisite:** state updates and graph edges. Your goal is to decide which operations are independent, which state each sees, and when a join can safely run.
 
@@ -61,7 +69,7 @@ Draw count_words → evaluate_word_limit and the list-source join with count_cha
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/08_parallel.py). Run from the repository root:
 

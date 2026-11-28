@@ -1,6 +1,16 @@
 ## What it is and why it matters
 The first reply can violate objective requirements or make an unsupported promise. An evaluator produces actionable feedback; an optimizer revises the reply using that feedback.
 
+::: concept Hybrid Evaluation: Deterministic Rules + Semantic LLM Judge
+- **Python rules (cheap, exact, 0 tokens):** enforce word counts, forbidden phrases, and required fields.
+- **LLM semantic judge (slower, understands meaning):** catches paraphrased policy violations (e.g., *"refund has been authorized"* passed 4/4 exact Python rules while the LLM judge caught it at `2/10`).
+Together they give complementary coverage—neither alone is sufficient.
+:::
+
+::: warning Distinguish all 3 loop exit outcomes
+An evaluator–optimizer loop can stop for three completely different reasons: **Approved**, **Plateau detected** (scores stopped improving across a window), or **Budget exhausted**. Track the full revision trajectory in state so you never treat a plateau or budget exit as an approval.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** bounded loops and evaluation schemas. Your goal is to explain what actually changes between attempts and why stopping does not always mean convergence.
 
@@ -57,7 +67,7 @@ Run the exact-phrase checker on “refund has been authorized.” Report the sco
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/10_iterative.py). Run from the repository root:
 

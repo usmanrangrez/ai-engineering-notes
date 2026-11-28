@@ -1,6 +1,14 @@
 ## What it is and why it matters
 A tracking service can fail after ticket preparation completed. Starting from scratch repeats work unnecessarily. A checkpointer can restore committed progress and schedule unfinished work.
 
+::: concept Why `invoke(None, config)` resumes instead of restarting
+Passing a new input dict (`{"ticket": "..."}`) starts a new turn from `START`. Passing **`None`** tells LangGraph *"no new input—continue this thread from its saved `snapshot.next`"* (skipping already-committed upstream nodes).
+:::
+
+::: warning Checkpointing does NOT guarantee exactly-once external side effects
+When a crashed node restarts, it re-runs from its **first line**, not the exact failed statement. Protect emails, charges, and writes with idempotency keys so replaying a failed node never duplicates business actions.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** checkpoints and pending next nodes. Your goal is to explain exactly what is repeated after a failure and which external effects might happen twice.
 
@@ -51,7 +59,7 @@ If prepare_ticket sent an email before failing, where would you place a stable o
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/14_recovery.py). Run from the repository root:
 

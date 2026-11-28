@@ -1,6 +1,14 @@
 ## What it is and why it matters
 A model knows only the messages supplied to that call. Your Python loop running twice does not itself give the second invocation the first invocation's state.
 
+::: mental-model LLMs are completely stateless HTTP functions
+An LLM API has zero built-in memory of Turn 1. "Memory" in a chatbot simply means your application resends `[Human1, AI1, Human2]` on Turn 2. `MessagesState` uses the **`add_messages` reducer** so returning `{"messages": [response]}` appends new messages by ID (or replaces an existing message when IDs match).
+:::
+
+::: warning A reducer merges within one state—it is NOT cross-call persistence
+`add_messages` merges updates during a run, but without a **checkpointer** (Chapter 12) or passing the full history list yourself, a second `graph.invoke(...)` call starts from an empty list.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** nodes and state updates. Your goal is to draw the exact list of messages sent to a model on each conversation turn.
 
@@ -70,7 +78,7 @@ Use add_messages to update an AIMessage with the same ID. Show that the message 
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/11_messages.py). Run from the repository root:
 

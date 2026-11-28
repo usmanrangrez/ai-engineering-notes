@@ -1,5 +1,13 @@
 ## What it is and why it matters
-invoke() returns after execution completes. Streaming exposes intermediate results so a caller can react while the graph is still running. It improves time to visible output; it does not inherently shorten total generation time.
+`invoke()` returns only after the entire graph completes. Streaming exposes live tokens, node deltas, and custom status updates as they happen—cutting time-to-first-token and letting users see tool progress or cancel early.
+
+::: tip Always filter `messages` streams by `metadata["langgraph_node"]`
+In a multi-node graph, `stream_mode="messages"` emits chunks from **every** LLM call (including internal classifier/judge nodes!). Check `metadata.get("langgraph_node") == "reply_node"` and `isinstance(chunk, AIMessageChunk)` so internal labels (like `DEL` + `IVERY`) never leak into the customer's chat bubble.
+:::
+
+::: warning Streaming events are NOT saved state
+Calling `get_stream_writer()("Searching PDF...")` pushes a live status event to the caller, but does **not** store anything in `state` or your checkpointer. Only node `return {...}` dicts update durable state.
+:::
 
 ## Learn from the beginning
 **Prerequisite:** graph execution and state updates. Your goal is to choose an observable event type and decode its actual Python shape without confusing it with saved state.
@@ -66,7 +74,7 @@ Emit a custom stage. After the stream, inspect the saved keys and show that stag
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/16_streaming.py). Run from the repository root:
 

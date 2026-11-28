@@ -1,6 +1,14 @@
 ## What it is and why it matters
 “Help me” has no useful policy category. Sending it through policy retrieval anyway creates a confident but irrelevant reply. Routing selects a destination from state.
 
+::: concept Routers are pure Python decision functions
+A conditional router inspects committed `state` and returns a `Literal` route label (`"clarify"`, `"account"`, `"policy"`). The `path_map` translates that label into a registered node name (or `END`). Routers should be fast, deterministic, and side-effect-free—put LLM work in the upstream node, not inside the router.
+:::
+
+::: warning Never combine a conditional edge and an ordinary edge to the same skipped node
+An ordinary `builder.add_edge("understand", "retrieve_policy")` **always** fires when `"understand"` finishes—a conditional router does *not* cancel it. Use `add_conditional_edges` exclusively for branching outputs.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** chapter 5's fixed chain. Your goal is to trace a decision from saved state to a selected destination and identify the nodes that must be skipped.
 
@@ -66,7 +74,7 @@ On paper, list the two state fields read by the first and second routers in the 
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/06_routing.py). Run from the repository root:
 

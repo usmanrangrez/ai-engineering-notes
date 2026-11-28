@@ -1,6 +1,16 @@
 ## What it is and why it matters
 One hardcoded thread ID mixes separate conversations. We need a stable ID for each conversation, a readable title, and an active selection.
 
+::: mental-model Two-layer backend: Conversation Directory + Checkpointer
+- **Layer 1 (Conversation Directory — app DB/JSON):** stores `{thread_id, title, owner_id, updated_at}` for the sidebar list (newest first).
+- **Layer 2 (LangGraph Checkpointer):** stores the actual `messages` and graph checkpoints keyed by `thread_id`.
+Clicking a chat in the sidebar looks up its `thread_id` in Layer 1, then loads its messages from Layer 2 via `graph.get_state(config)`.
+:::
+
+::: warning Never use a chat title as the `thread_id`
+Titles can be renamed or duplicated across users. Always generate an immutable `str(uuid4())` as the primary key and keep the title as editable metadata.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** saved state selected by thread ID. Your goal is to implement “new chat” and “switch chat” without deleting existing conversations or confusing labels with storage keys.
 
@@ -58,7 +68,7 @@ Call add_thread twice with the same ID. Paste the unchanged directory length and
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/17_threads.py). Run from the repository root:
 

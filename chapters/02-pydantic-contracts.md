@@ -1,6 +1,15 @@
 ## What it is and why it matters
 Natural-language output is awkward to route on. A validated schema makes fields such as category, sentiment, score, and feedback usable in Python.
 
+::: concept Why we use `TypedDict` for Graph State and Pydantic `BaseModel` for LLM Contracts
+- **`TypedDict`** defines the keys flowing between LangGraph nodes with zero runtime overhead—great for internal graph state (`state["messages"]`, `state["category"]`).
+- **Pydantic `BaseModel`** enforces **runtime validation** (`Literal`, `Field(ge=0, le=10)`, `ValidationError`) at untrusted boundaries—LLM structured outputs (`with_structured_output`) and FastAPI HTTP request/response bodies.
+:::
+
+::: warning Structural validity does NOT prove factual truth
+An LLM can return `Evaluation(verdict="approved", score=10, feedback="Refund granted")` for a reply that violates company policy. Pydantic proves the **shape and bounds** of the data—never business correctness.
+:::
+
 ## Learn from the beginning
 **Prerequisite:** Python dictionaries, classes, and type hints. Your goal is to distinguish a desired response shape from a response whose business claims are true.
 
@@ -55,7 +64,7 @@ Print the types of `result`, `result.model_dump()`, and `result.model_dump_json(
 
 ## Runnable example and verified trace
 
-This is a new, reconstructed offline teaching lab, executed by the notes author on 2026-11-22. It makes no model call and is separate from the historical learner receipts below. [Set up the repository](../start.html) first.
+Offline lab (no API key or model call required; [setup guide](../start.html)):
 
 [Open the complete Python file](../examples/02_contracts.py). Run from the repository root:
 
