@@ -1,18 +1,24 @@
 # Learning progress
 
-Last updated: 2026-11-26
+Last updated: 2026-11-28
 
 ## Current position
-Video 20 / Chatbot Part 8 (**RAG in LangGraph**) is complete with live receipts in `support_ticket/26_support_ticket_rag.py` (PDF loading, chunking with verified page-3 overlap, single and multi-chunk `gemini-embedding-001` vectors, cosine similarity and narrow-cone verification, full 44-chunk `InMemoryVectorStore` with JSON persistence on disk, `@tool def rag_tool`, and 3-path LangGraph execution using Groq `openai/gpt-oss-120b`). Tool calling (`24_support_ticket_tools.py`) and ReAct (`25_support_ticket_react.py`) are also complete.
+All core chatbot building blocks through **Video 21 / Chatbot Part 9** are complete with live receipts:
+- **RAG in LangGraph (Video 20 / Part 8):** `26_support_ticket_rag.py`
+- **Human-in-the-Loop (Video 21 / Part 9 / `#28`):** `27_support_ticket_hitl.py` (safe tool vs. sensitive `issue_refund` with `interrupt()`, `Command(resume=...)`, and Approve / Edit / Reject paths)
+- **Persistence (`#26` — properly redone):** `28_persistence_basics.py` (checkpoints, isolated threads, fault tolerance with `invoke(None)`), `29_persistence_time_travel.py` (time travel + `update_state` fork `4 → 7` checkpoints), and `30_persistence_sqlite.py` (`SqliteSaver` surviving across separate Python processes)
+- **Streaming (`#27` — visually refreshed):** `31_streaming_modes.py` (live token chunks, `get_stream_writer()`, combined `["messages", "custom"]`, and `metadata["langgraph_node"]` filtering) + Part 4 multi-thread backend architecture refreshed.
 
-**Next:** On 2026-11-26 the learner asked to mark **Topic #26 Persistence** (checkpointers, SQLite, replay, checkpoint editing — Chapters 12–15) **undone** to redo it properly before moving into **Video 21 / Chatbot Part 9 / Topic #28 Human-in-the-Loop** (`interrupt` and `Command(resume=...)`).
+**Next:**
+1. Build a **resume-worthy integrated end-to-end project** (Chapter 25 — combining RAG, tools, SQLite persistence, streaming, multi-thread management, LangSmith tracing, and HITL), then **deploy it** (Bappy Videos 22–23: Docker, GitHub Actions, AWS, Render).
+2. Continue with remaining core LangGraph (`#29` Subgraphs, `#30` `Send`/map-reduce, `#34` shared long-term memory), then Backend/MCP/Guardrails/Multi-Agent, systematic evaluations, production ops, `#35` Recruitment Capstone, and extensions.
 
 The learner confirmed a two-case LangSmith dataset and ran a local evaluator. No full evaluation experiment was run. Resume that material at systematic evaluation or when the project requires a small pre-deployment check.
 
 ## Course backbone
 DSwithBappy’s playlist: https://www.youtube.com/playlist?list=PLkz_y24mlSJZ9SFlc9O4Q4Grli5SQDbrB
 
-Backend coverage through numbered video 20 / chatbot Part 8 (tools, ReAct, and RAG in LangGraph) is complete, except that Persistence (#26, Chapters 12–15) is marked undone for a proper hands-on redo before numbered video 21 / chatbot Part 9 (HITL), then 22 AWS deployment, 23 Render. UI work is deferred. The larger playlist and extra original topics remain in ROADMAP.md and the Planned chapter pages.
+Backend coverage through numbered video 21 / chatbot Part 9 (persistence, streaming, threads, SQLite, LangSmith, tools/ReAct, RAG, and Human-in-the-Loop) is complete. Next is a resume-worthy integrated project (Chapter 25), then numbered videos 22–23 (Docker/AWS/CI/CD and Render). The larger playlist and extra original topics remain in ROADMAP.md and the Planned chapter pages.
 
 ## Original syllabus
 | Original topic | Scope | Status |
@@ -25,9 +31,9 @@ Backend coverage through numbered video 20 / chatbot Part 8 (tools, ReAct, and R
 | 23 | Conditional workflow and bounded loops | Complete |
 | 24 | Parallel workflow | Complete |
 | 25 | Iterative workflow | Complete |
-| 26 | Persistence and checkpointers | Undone — redo planned before HITL |
-| 27 | Streaming | Complete |
-| 28 | Human-in-the-loop | Planned (after Persistence redo) |
+| 26 | Persistence and checkpointers | Complete (redone hands-on) |
+| 27 | Streaming | Complete (refreshed hands-on) |
+| 28 | Human-in-the-loop | Complete |
 | 29 | Subgraphs | Planned |
 | 30 | Send / map-reduce | Planned |
 | 31 | Tool calling as a graph | Complete |
@@ -36,7 +42,7 @@ Backend coverage through numbered video 20 / chatbot Part 8 (tools, ReAct, and R
 | 34 | Memory across threads | Separate threads done; shared long-term memory planned |
 | 35 | Recruitment capstone | Planned |
 
-11/18 original topics fully complete (with #26 Persistence marked undone for a proper redo, #33 core tracing complete, and #34 separate threads done). This is not a percentage of the expanded roadmap.
+13/18 original topics fully complete (with #33 core tracing complete and #34 separate threads done). This is not a percentage of the expanded roadmap.
 
 ## Notes chapters
 - 01. Async Python for agents: Read — Prior completion recorded; original receipt unavailable
@@ -50,11 +56,11 @@ Backend coverage through numbered video 20 / chatbot Part 8 (tools, ReAct, and R
 - 09. Parallel LLM reviews and structured-output failures: Read — Completed hands-on
 - 10. Iterative refinement and hybrid evaluation: Read — Completed hands-on
 - 11. Chatbot message state and add_messages: Read — Completed hands-on
-- 12. Persistence, snapshots, and history: Planned — Marked undone for proper hands-on redo (historical notes preserved)
-- 13. SQLite persistence across restarts: Planned — Marked undone for proper hands-on redo (historical notes preserved)
-- 14. Recovery, continuation, and replay: Planned — Marked undone for proper hands-on redo (historical notes preserved)
-- 15. Edit messages and fork a checkpoint: Planned — Marked undone for proper hands-on redo (historical notes preserved)
-- 16. Streaming updates, state, text, and progress: Read — Completed hands-on
+- 12. Persistence, snapshots, and history: Read — Completed hands-on (redone visually with live receipts)
+- 13. SQLite persistence across restarts: Read — Completed hands-on (redone across separate processes)
+- 14. Recovery, continuation, and replay: Read — Completed hands-on (crash recovery verified live)
+- 15. Edit messages and fork a checkpoint: Read — Completed hands-on (time-travel fork visual + receipt)
+- 16. Streaming updates, state, text, and progress: Read — Completed hands-on (refreshed with combined modes + node filtering)
 - 17. Conversation IDs, titles, and switching: Read — Completed hands-on
 - 18. Durable directories and SQLite chat history: Read — Completed hands-on
 - 19. LangSmith tracing and debugging: Read — Completed hands-on
@@ -62,7 +68,7 @@ Backend coverage through numbered video 20 / chatbot Part 8 (tools, ReAct, and R
 - 21. Tool calling in LangGraph: Read — Completed hands-on
 - 22. Build the model–tool loop: Read — Completed hands-on
 - 23. RAG in LangGraph: Read — Completed hands-on (with interactive visuals)
-- 24. Human approval and interrupts: Planned — Not started; scope only
+- 24. Human approval and interrupts: Read — Completed hands-on (Approve, Edit, Reject + interactive visuals)
 - 25. Integrate the support agent: Planned — Not started; scope only
 - 26. Docker, AWS, and GitHub Actions: Planned — Not started; scope only
 - 27. A second deployment route: Render: Planned — Not started; scope only
@@ -108,6 +114,9 @@ Backend coverage through numbered video 20 / chatbot Part 8 (tools, ReAct, and R
 - Tool calling (`24_support_ticket_tools.py`): `@tool`, `bind_tools`, `AIMessage.tool_calls`, `ToolMessage.tool_call_id`, `ToolNode`, `tools_condition`, and back edge; greeting 0 calls, `ORD-42` 1 lookup + second model call.
 - ReAct loop (`25_support_ticket_react.py`): dependent two-tool chain `ORD-42` → `TRK-8317` → `IN_TRANSIT`; 3 model calls requesting `1, 1, 0` tools with `tools_enabled=False` on call 3.
 - RAG in LangGraph (`26_support_ticket_rag.py`): `my_paper.pdf` (15 pages, 44 chunks, page-3 overlap `145` chars), `gemini-embedding-001` (`3072` dims), cosine similarity (`0.7528` rainfall vs `0.4796` pizza), `InMemoryVectorStore` JSON persistence (`my_paper_index.json`), `@tool def rag_tool`, and 3-path LangGraph execution citing `my_paper.pdf` pages 4 and 5.
+- Human-in-the-Loop (`27_support_ticket_hitl.py`): 1-node `interrupt()` restart proof, structured dict Approve/Edit/Reject resumes, and 4-path Groq agent (`get_order_status` unpaused vs. `issue_refund` paused with Approve `$120`, Edit `$50`, Reject).
+- Persistence redo (`28_persistence_basics.py`, `29_persistence_time_travel.py`, `30_persistence_sqlite.py`): 4-snapshot history & thread isolation, crash recovery via `invoke(None)` skipping `classify`, time-travel fork via `update_state` (`4 → 7` checkpoints), and `SqliteSaver` loading saved state across separate Python processes with 0 nodes run.
+- Streaming refresh (`31_streaming_modes.py`): `45` live Groq token chunks, `get_stream_writer()` custom progress events, combined `["messages", "custom"]` stream, and `langgraph_node` filtering hiding internal `classify_node` tokens (`DEL`/`IVERY`).
 
 ## Environment record
 Use Python and uv in the learner's existing AgenticAI project. Public notes use <PROJECT_ROOT>; no real local path is required. Historical receipts span Python 3.14.4–3.14.6. At the successful LangSmith checkpoint: langchain-core 1.8.4, langsmith 0.16.0, langchain-groq 1.2.1. These are observed versions, not globally pinned latest requirements. The working model was Groq openai/gpt-oss-120b with reasoning_effort=low. The historical qwen reviewer is listed as preview in Groq’s catalog checked on 2026-11-22; its current options/tool behavior were not live-tested during the notes expansion.

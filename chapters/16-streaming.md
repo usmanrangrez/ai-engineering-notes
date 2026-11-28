@@ -7,6 +7,8 @@ invoke() returns after execution completes. Streaming exposes intermediate resul
 ### Concept 1 — Streaming yields intermediate observations
 **Streaming** lets an application consume events while an execution is running. `invoke` returns after completion; `stream` returns an iterator that yields selected events. Streaming itself does not choose graph routes or guarantee faster model inference. It can improve time to the first visible progress or text.
 
+::: visual streaming-modes | Interactive replay comparing invoke() against messages, updates, values, and custom stream modes
+
 ```text
 invoke: START ----------------------------- final result
 stream: START -- update -- progress -- text chunks -- completion
@@ -234,6 +236,17 @@ writer() emits an event; it does not update graph state. The node's return saved
 
 ## In production
 Separate API transport streaming from graph events. If a user stops display, that alone does not guarantee provider generation was cancelled or tokens were saved. Define cancellation and failure handling explicitly.
+
+## Updated refresh receipt (2026-11-28: `31_streaming_modes.py`)
+Testing combined `stream_mode=["messages", "custom"]` on a two-node Groq graph (`classify_node` → `reply_node`) proved both live token delivery (`45` chunks in standalone `messages` mode) and node filtering via `metadata.get("langgraph_node")` so internal classifier tokens (`DEL`, `IVERY`) do not leak into the customer's streamed reply:
+```text
+-> [status] Classifying ticket internally...
+[hidden chunk from classify_node]: DEL
+[hidden chunk from classify_node]: IVERY
+-> [status] Internal label decided: DELIVERY
+-> [status] Streaming reply to customer...
+(SHOWN from reply_node: 22 | HIDDEN from classify_node: 2)
+```
 
 ## Interview questions
 ::: question Must I join chunks to persist the final answer?

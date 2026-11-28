@@ -14,6 +14,8 @@ replacement = HumanMessage(id=original.id, content="My order ID is ORDER-NEW.")
 Changing the content while generating a new ID generally appends a new message. The role matters too: replace the intended human message, not whichever item happens to be last. A thread ID selects a history; a message ID selects an item within message state.
 
 ### Concept 2 — Choose a checkpoint before the dependent answer
+::: visual persistence-time-travel | Time-travel fork diagram showing 4 original checkpoints growing to 7
+
 ```text
 original: human OLD --> checkpoint C --> assistant OLD
                               |
@@ -199,6 +201,21 @@ In `f"content={message.content!r}"`, !r formats the value using repr(). It makes
 
 ## In production
 Define whether editing an earlier message discards or branches later turns. Our CLI edited the most recent user turn. Editing arbitrary old messages requires an explicit policy for subsequent state and external actions.
+
+## Updated redo receipt (2026-11-28: `29_persistence_time_travel.py`)
+Forking from the historical checkpoint with `next=('classify',)` via `graph.update_state(past_snap.config, {"ticket": "Please cancel ORD-99"})` preserved all 4 original checkpoints and appended 3 new forked checkpoints (total `7`):
+```text
+=== ORIGINAL RUN ===
+-> RUNNING classify on: Order ORD-42 is late
+-> RUNNING draft_reply for: delivery
+ORIGINAL RESULT: {'ticket': 'Order ORD-42 is late', 'category': 'delivery', 'reply': 'Handling delivery request for: Order ORD-42 is late'}
+
+=== FORKED RUN ===
+-> RUNNING classify on: Please cancel ORD-99
+-> RUNNING draft_reply for: cancellation
+FORKED RESULT: {'ticket': 'Please cancel ORD-99', 'category': 'cancellation', 'reply': 'Handling cancellation request for: Please cancel ORD-99'}
+HISTORY CHECKPOINTS -> before fork: 4 | after fork: 7
+```
 
 ## Interview questions
 ::: question Does changing content alone replace a message?

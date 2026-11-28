@@ -7,6 +7,8 @@ The chatbot cannot answer a follow-up about an order ID unless previous messages
 ### Concept 1 — Persistence saves application state outside one invocation
 **Persistence** means retaining data for later use. A **checkpointer** is the component that saves graph execution records. A **checkpoint** is a saved execution boundary containing state and continuation information. A **snapshot** is the object returned when you inspect such saved state.
 
+::: visual persistence-checkpoints | Interactive super-step checkpoints and isolated thread switcher
+
 ```text
 new input + thread ID
           |
@@ -218,6 +220,19 @@ The tuple's trailing comma makes it a one-item tuple. snapshot.next is an attrib
 
 ## In production
 InMemorySaver survives repeated calls in the same process but not process exit. Checkpointing is thread-scoped memory, not automatically cross-thread long-term memory. Keep application ownership checks outside the assumption that knowing an ID grants access.
+
+## Updated redo receipt (2026-11-27: `28_persistence_basics.py`)
+Running a deterministic two-node workflow (`classify` → `draft_reply`) across two isolated threads (`ticket-A` and `ticket-B`) confirmed newest-first checkpoint history and thread isolation:
+```text
+LATEST ticket-A values: {'ticket': 'Order ORD-42 is late', 'category': 'delivery', 'reply': 'Handling delivery request for: Order ORD-42 is late'}
+LATEST ticket-A next: ()
+
+HISTORY for ticket-A (newest first):
+  next=() | values={'ticket': 'Order ORD-42 is late', 'category': 'delivery', 'reply': 'Handling delivery request for: Order ORD-42 is late'} | cp_id=<CHECKPOINT_ID>
+  next=('draft_reply',) | values={'ticket': 'Order ORD-42 is late', 'category': 'delivery'} | cp_id=<CHECKPOINT_ID>
+  next=('classify',) | values={'ticket': 'Order ORD-42 is late'} | cp_id=<CHECKPOINT_ID>
+  next=('__start__',) | values={} | cp_id=<CHECKPOINT_ID>
+```
 
 ## Interview questions
 ::: question Is get_state_history the chat message history?

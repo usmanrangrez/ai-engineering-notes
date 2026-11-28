@@ -207,6 +207,20 @@ If parallel work partially succeeds, checkpoint pending writes can preserve succ
 ## In production
 External side effects need idempotency. Restoring state does not guarantee an email, refund request, or job post executes exactly once. Define recovery and compensation around business actions.
 
+## Updated redo receipt (2026-11-27: `28_persistence_basics.py` crash recovery)
+Simulating a `RuntimeError` inside `draft_reply` and calling `graph.invoke(None, config=config_crash)` after recovery proved `classify` ran once while `draft_reply` ran twice:
+```text
+=== RUN 1 (simulated crash) ===
+-> RUNNING classify
+-> RUNNING draft_reply
+CRASHED: Simulated API outage inside draft_reply!
+SAVED AFTER CRASH -> next: ('draft_reply',) | values: {'ticket': 'Order ORD-42 is late', 'category': 'delivery'}
+
+=== RUN 2 (outage fixed -> resume with None) ===
+-> RUNNING draft_reply
+RECOVERED: {'ticket': 'Order ORD-42 is late', 'category': 'delivery', 'reply': 'Handling delivery request for: Order ORD-42 is late'}
+```
+
 ## Interview questions
 ::: question What if invoke(None) targets a completed latest checkpoint?
 There is no pending node to execute. It is not automatically a new conversation turn.

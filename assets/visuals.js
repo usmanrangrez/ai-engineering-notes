@@ -250,11 +250,238 @@
     render();
   }
 
+  /* 5. Persistence Checkpoints, Super-Steps & Threads */
+  function mountPersistenceCheckpoints(root) {
+    const threads = {
+      a: {
+        id: 'ticket-A',
+        snaps: [
+          { id: 'CP 0', kind: 'INITIAL', c: 'var(--accent)', st: '{"ticket": "Order ORD-42 is late"}', nxt: "('classify',)", nc: 'var(--v-warn)', why: 'Input merged at <strong>START</strong>. Neither node has run yet—<code>snapshot.next</code> schedules <code>classify</code>.' },
+          { id: 'CP 1', kind: 'INTERMEDIATE', c: 'var(--v-warn)', st: '{"ticket": "Order ORD-42 is late", "category": "delivery"}', nxt: "('draft_reply',)", nc: 'var(--v-warn)', why: '<strong>Fault tolerance:</strong> <code>classify</code> finished and saved this checkpoint. If <code>draft_reply</code> crashes, <code>invoke(None, config)</code> resumes here without re-running <code>classify</code>.' },
+          { id: 'CP 2', kind: 'FINAL', c: 'var(--v-ok)', st: '{"ticket": "Order ORD-42 is late", "category": "delivery", "reply": "Handling delivery..."}', nxt: '()  (finished)', nc: 'var(--v-ok)', why: 'Graph reached <strong>END</strong>, yet all checkpoints stay saved under <code>ticket-A</code> for follow-up turns or time travel.' }
+        ]
+      },
+      b: {
+        id: 'ticket-B',
+        snaps: [
+          { id: 'CP 0', kind: 'INITIAL', c: 'var(--accent)', st: '{"ticket": "Please cancel ORD-99"}', nxt: "('classify',)", nc: 'var(--v-warn)', why: 'Completely isolated from <code>ticket-A</code>—same graph, separate timeline.' },
+          { id: 'CP 1', kind: 'INTERMEDIATE', c: 'var(--v-warn)', st: '{"ticket": "Please cancel ORD-99", "category": "cancellation"}', nxt: "('draft_reply',)", nc: 'var(--v-warn)', why: '<code>ticket-A</code> delivery state never leaks into <code>ticket-B</code>.' },
+          { id: 'CP 2', kind: 'FINAL', c: 'var(--v-ok)', st: '{"ticket": "Please cancel ORD-99", "category": "cancellation", "reply": "Handling cancellation..."}', nxt: '()  (finished)', nc: 'var(--v-ok)', why: 'Calling <code>get_state(config)</code> loads whichever <code>thread_id</code> you request.' }
+        ]
+      }
+    };
+    let th = 'a', cp = 0;
+    function render() {
+      const t = threads[th], s = t.snaps[cp];
+      const nodes = ['START', 'classify', 'draft_reply', 'END'];
+      const done = cp === 0 ? 0 : (cp === 1 ? 1 : 3);
+      root.innerHTML = `
+        <div class="v-bar">
+          <div class="v-tabs">
+            <button type="button" class="v-btn ${th === 'a' ? 'active' : ''}" data-t="a">ticket-A</button>
+            <button type="button" class="v-btn ${th === 'b' ? 'active' : ''}" data-t="b">ticket-B</button>
+          </div>
+          <div class="v-tabs">
+            ${[0, 1, 2].map(i => `<button type="button" class="v-btn ${cp === i ? 'active' : ''}" data-c="${i}">CP ${i}</button>`).join('')}
+            <button type="button" class="v-btn" data-n="1">Next →</button>
+          </div>
+        </div>
+        <div class="v-card" style="margin-bottom:10px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px">
+          ${nodes.map((n, i) => `<span class="v-badge" style="border-color:${i <= done ? 'var(--v-ok)' : (i === done + 1 ? 'var(--v-warn)' : 'var(--line)')};color:${i <= done ? 'var(--text)' : (i === done + 1 ? 'var(--v-warn)' : 'var(--muted)')}">${esc(n)}</span>`).join('<span class="v-muted">→</span>')}
+        </div>
+        <div class="v-grid">
+          <div class="v-card v-stack">
+            <div class="v-card-head"><span>Checkpointer Snapshot (${esc(s.id)})</span><span class="v-badge" style="border-color:${s.c};color:${s.c}">${esc(s.kind)}</span></div>
+            <div class="v-mono"><span class="v-muted">thread_id:</span> <strong style="color:var(--accent)">"${esc(t.id)}"</strong></div>
+            <div class="v-mono"><span class="v-muted">values:</span> ${esc(s.st)}</div>
+            <div class="v-mono"><span class="v-muted">next:</span> <strong style="color:${s.nc}">${esc(s.nxt)}</strong></div>
+          </div>
+          <div class="v-card v-stack" style="justify-content:space-between">
+            <div>${s.why}</div>
+            <div class="v-muted"><strong>RAM vs. Disk:</strong> <code>InMemorySaver</code> clears on process exit; <code>SqliteSaver</code> survives restarts.</div>
+          </div>
+        </div>`;
+      root.querySelectorAll('[data-t]').forEach(b => b.addEventListener('click', () => { th = b.dataset.t; render(); }));
+      root.querySelectorAll('[data-c]').forEach(b => b.addEventListener('click', () => { cp = Number(b.dataset.c); render(); }));
+      root.querySelector('[data-n]').addEventListener('click', () => { cp = (cp + 1) % 3; render(); });
+    }
+    render();
+  }
+
+  /* 6. Time Travel & Forking Diagram */
+  function mountTimeTravel(root) {
+    root.innerHTML = `
+      <div class="v-bar">
+        <span class="v-meta"><strong>Time Travel &amp; Forking</strong> · thread_id="ticket-1" (4 original → 7 total checkpoints)</span>
+        <span class="v-meta">history is never erased</span>
+      </div>
+      <div class="v-card">
+        <svg class="v-svg" viewBox="0 0 540 162" role="img" aria-label="Forking a LangGraph checkpoint timeline">
+          <defs>
+            <marker id="tt-orig" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0,6 3,0 6" fill="var(--muted)"/></marker>
+            <marker id="tt-fork" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0,6 3,0 6" fill="var(--v-ok)"/></marker>
+          </defs>
+          <line x1="126" y1="34" x2="178" y2="34" stroke="var(--muted)" stroke-width="1.8" marker-end="url(#tt-orig)"/>
+          <line x1="316" y1="34" x2="368" y2="34" stroke="var(--muted)" stroke-width="1.8" marker-end="url(#tt-orig)"/>
+          <rect x="8" y="10" width="118" height="48" rx="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>
+          <text x="67" y="27" fill="var(--accent)" font-size="11" font-weight="600" font-family="monospace" text-anchor="middle">CP 0 (past)</text>
+          <text x="67" y="41" fill="var(--text)" font-size="10" font-family="monospace" text-anchor="middle">ORD-42 is late</text>
+          <text x="67" y="52" fill="var(--muted)" font-size="9.5" font-family="monospace" text-anchor="middle">next=('classify',)</text>
+          <rect x="182" y="10" width="134" height="48" rx="4" fill="var(--surface)" stroke="var(--line)" opacity="0.75"/>
+          <text x="249" y="27" fill="var(--muted)" font-size="10.5" font-family="monospace" text-anchor="middle">CP 1 (original)</text>
+          <text x="249" y="41" fill="var(--muted)" font-size="10" font-family="monospace" text-anchor="middle">category: delivery</text>
+          <text x="249" y="52" fill="var(--muted)" font-size="9.5" font-family="monospace" text-anchor="middle">kept in history</text>
+          <rect x="372" y="10" width="156" height="48" rx="4" fill="var(--surface)" stroke="var(--line)" opacity="0.75"/>
+          <text x="450" y="27" fill="var(--muted)" font-size="10.5" font-family="monospace" text-anchor="middle">CP 2 (original)</text>
+          <text x="450" y="41" fill="var(--muted)" font-size="10" font-family="monospace" text-anchor="middle">reply: delivery...</text>
+          <text x="450" y="52" fill="var(--muted)" font-size="9.5" font-family="monospace" text-anchor="middle">next=() · preserved</text>
+          <path d="M 67 58 L 67 118 L 178 118" fill="none" stroke="var(--v-ok)" stroke-width="2" marker-end="url(#tt-fork)"/>
+          <text x="74" y="92" fill="var(--v-ok)" font-size="10" font-family="monospace" font-weight="600">update_state(past_config,</text>
+          <text x="74" y="104" fill="var(--v-ok)" font-size="10" font-family="monospace">{"ticket": "Please cancel ORD-99"})</text>
+          <rect x="182" y="94" width="144" height="48" rx="4" fill="var(--surface)" stroke="var(--v-ok)" stroke-width="2"/>
+          <text x="254" y="111" fill="var(--v-ok)" font-size="11" font-weight="600" font-family="monospace" text-anchor="middle">CP 0-fork (new)</text>
+          <text x="254" y="125" fill="var(--text)" font-size="10" font-family="monospace" text-anchor="middle">cancel ORD-99</text>
+          <text x="254" y="136" fill="var(--muted)" font-size="9.5" font-family="monospace" text-anchor="middle">next=('classify',)</text>
+          <line x1="326" y1="118" x2="368" y2="118" stroke="var(--v-ok)" stroke-width="2" marker-end="url(#tt-fork)"/>
+          <text x="347" y="109" fill="var(--v-ok)" font-size="9.5" font-family="monospace" text-anchor="middle">invoke(None)</text>
+          <rect x="372" y="94" width="156" height="48" rx="4" fill="var(--surface)" stroke="var(--v-ok)" stroke-width="2"/>
+          <text x="450" y="111" fill="var(--v-ok)" font-size="11" font-weight="600" font-family="monospace" text-anchor="middle">Forked Final</text>
+          <text x="450" y="125" fill="var(--text)" font-size="10" font-family="monospace" text-anchor="middle">category: cancellation</text>
+          <text x="450" y="136" fill="var(--muted)" font-size="9.5" font-family="monospace" text-anchor="middle">reply: cancellation...</text>
+        </svg>
+      </div>
+      <div class="v-foot">Like <code>git branch</code>, <code>update_state</code> branches from a past <code>checkpoint_id</code> without deleting original checkpoints—4 checkpoints grew to 7 in our live lab.</div>`;
+  }
+
+  /* 7. Streaming Modes Interactive Replay */
+  function mountStreamingModes(root) {
+    const modes = {
+      invoke: { tab: 'invoke()', title: 'Blocks until END', shape: '1 final dict after full wait', use: 'User stares at a blank screen until every token finishes.', delay: 1100, replace: true, chunks: ['Waiting for entire response...', 'We’re sorry—your order ORD-42 is delayed and should arrive shortly.'] },
+      messages: { tab: 'messages', title: 'Token-by-token LLM output', shape: 'for chunk, meta in stream(...):\n  meta["langgraph_node"]', use: 'Best for ChatGPT-style typing. Filter by langgraph_node to hide internal classifier tokens.', delay: 140, replace: false, chunks: ['We', '’re', ' sorry', ' your', ' order', ' ORD', '-42', ' is', ' delayed', '.', ' It', ' should', ' arrive', ' shortly', '.'] },
+      updates: { tab: 'updates', title: 'Node delta after each node', shape: '{node_name: partial_dict}', use: 'Best for backend logs and step tracking.', delay: 480, replace: false, chunks: ["{'classify_node': {}}\n", "{'reply_node': {'messages': [AIMessage(...)]}}\n"] },
+      values: { tab: 'values', title: 'Full state per super-step', shape: 'full_state_dict', use: 'Best when UI needs the complete state snapshot after each step.', delay: 480, replace: false, chunks: ["step 0: {'messages': [HumanMessage]}\n", "step 1: {'messages': [HumanMessage, AIMessage]}\n"] },
+      custom: { tab: 'custom', title: 'Explicit progress (get_stream_writer)', shape: 'writer("-> [status] ...")', use: 'Best for live status badges like "Classifying ticket..." or "Searching PDF...".', delay: 460, replace: false, chunks: ['-> [status] Classifying ticket internally...\n', '-> [status] Internal label decided: DELIVERY\n', '-> [status] Streaming reply to customer...\n'] }
+    };
+    let cur = 'messages', timers = [];
+    function clear() { timers.forEach(clearTimeout); timers = []; }
+    function play() {
+      clear();
+      const m = modes[cur];
+      root.innerHTML = `
+        <div class="v-bar">
+          <div class="v-tabs">${Object.keys(modes).map(k => `<button type="button" class="v-btn ${k === cur ? 'active' : ''}" data-m="${k}">${esc(modes[k].tab)}</button>`).join('')}</div>
+          <button type="button" class="v-btn active" data-r="1">▶ Replay</button>
+        </div>
+        <div class="v-grid-wide">
+          <div class="v-card v-stack">
+            <div class="v-card-head"><span>${esc(m.title)}</span><span class="v-mono v-muted" data-st>streaming...</span></div>
+            <div class="v-code" style="min-height:92px;white-space:pre-wrap" data-out></div>
+          </div>
+          <div class="v-card v-stack" style="justify-content:space-between">
+            <div><div class="v-meta">Yielded shape:</div><div class="v-mono" style="margin-top:4px;white-space:pre-wrap">${esc(m.shape)}</div></div>
+            <div class="v-muted">${esc(m.use)}</div>
+          </div>
+        </div>`;
+      root.querySelectorAll('[data-m]').forEach(b => b.addEventListener('click', () => { cur = b.dataset.m; play(); }));
+      root.querySelector('[data-r]').addEventListener('click', play);
+      const out = root.querySelector('[data-out]'), st = root.querySelector('[data-st]');
+      if (m.replace) {
+        out.textContent = m.chunks[0];
+        st.textContent = 'blocked...';
+        timers.push(setTimeout(() => { out.textContent = m.chunks[1]; st.textContent = 'done (1 dump)'; }, m.delay));
+      } else {
+        m.chunks.forEach((ch, idx) => {
+          timers.push(setTimeout(() => {
+            out.textContent += ch;
+            if (idx === m.chunks.length - 1) st.textContent = `done (${m.chunks.length} events)`;
+          }, (idx + 1) * m.delay));
+        });
+      }
+    }
+    play();
+  }
+
+  /* 8. HITL: Python input() vs LangGraph interrupt() */
+  function mountHitlVsInput(root) {
+    root.innerHTML = `
+      <div class="v-grid">
+        <div class="v-card v-stack">
+          <div class="v-card-head"><span>Plain Python <code>input()</code></span><span class="v-badge" style="color:var(--v-warn);border-color:var(--v-warn)">Blocks process</span></div>
+          <div class="v-row"><span>1. Agent drafts $120 refund</span></div>
+          <div class="v-row" style="border-color:var(--v-warn)"><span>2. <strong>FREEZES</strong> waiting on keyboard...</span></div>
+          <div class="v-row" style="opacity:.6"><span>3. Server restart / 2 hr wait → state LOST</span></div>
+          <div class="v-muted">Cannot hold an HTTP request open while waiting for a human reviewer.</div>
+        </div>
+        <div class="v-card v-stack">
+          <div class="v-card-head"><span>LangGraph <code>interrupt()</code></span><span class="v-badge" style="color:var(--v-ok);border-color:var(--v-ok)">Save &amp; exit</span></div>
+          <div class="v-row"><span>1. Agent drafts $120 refund</span></div>
+          <div class="v-row" style="border-color:var(--accent)"><span>2. <code>interrupt()</code> saves checkpoint &amp; exits</span></div>
+          <div class="v-row" style="border-color:var(--v-ok)"><span>3. Later: <code>Command(resume=...)</code> wakes it up</span></div>
+          <div class="v-muted">Server stays free while waiting; checkpointer restores the exact paused run.</div>
+        </div>
+      </div>`;
+  }
+
+  /* 9. HITL 4-Frame Pause & Resume (Approve / Edit / Reject) */
+  function mountHitlPauseResume(root) {
+    const choices = {
+      approve: { cmd: 'Command(resume={"action": "approve"})', out: 'REFUND_ISSUED: $120 refunded for ORD-42.' },
+      edit: { cmd: 'Command(resume={"action": "edit", "amount": 50})', out: 'REFUND_ISSUED_EDITED: $50 refunded for ORD-42 (revised from $120).' },
+      reject: { cmd: 'Command(resume={"action": "reject"})', out: 'REFUND_REJECTED: human reviewer declined $120 refund for ORD-42.' }
+    };
+    const tabs = ['1. Tool called', '2. Pause (interrupt)', '3. Human resumes', '4. Tool & reply finish'];
+    let f = 0, ch = 'approve';
+    function render() {
+      const c = choices[ch];
+      const badge = f === 0 ? ['RUNNING', 'var(--accent)'] : (f === 1 ? ['PAUSED', 'var(--v-warn)'] : (f === 2 ? ['RESUMING', 'var(--v-ok)'] : ['DONE', 'var(--v-ok)']));
+      const payload = f === 0
+        ? 'graph.invoke(\n  {"messages": [HumanMessage("Refund $120 for ORD-42")]},\n  config={"configurable": {"thread_id": "ticket-1"}}\n)'
+        : f === 1
+        ? 'result["messages"] -> 2 msgs (NO ToolMessage yet)\nresult["__interrupt__"] -> [\n  Interrupt(value={"order_id": "ORD-42", "amount": 120})\n]'
+        : f === 2
+        ? `graph.invoke(\n  ${c.cmd},\n  config={"configurable": {"thread_id": "ticket-1"}}\n)`
+        : `ToolMessage:\n  "${c.out}"\n\nask_model (#2) reads ToolMessage → writes final reply (4 msgs total).`;
+      const foot = [
+        '<strong>Frame 1:</strong> Groq requests <code>issue_refund("ORD-42", 120)</code>. Safe tools like <code>get_order_status</code> skip interrupts completely.',
+        '<strong>Frame 2:</strong> Inside <code>issue_refund</code>, <code>interrupt()</code> freezes BEFORE <code>return</code>—so NO <code>ToolMessage</code> exists yet and no money moves.',
+        '<strong>Frame 3:</strong> Human chooses Approve, Edit ($50), or Reject. Your app sends <code>Command(resume=...)</code> using the <strong>same <code>thread_id</code></strong>.',
+        '<strong>Frame 4:</strong> LangGraph restarts <code>issue_refund</code> from line 1, hands the resume value out of <code>interrupt()</code>, creates <code>ToolMessage</code>, and Groq writes the final answer.'
+      ][f];
+      root.innerHTML = `
+        <div class="v-bar">
+          <div class="v-tabs">${tabs.map((t, i) => `<button type="button" class="v-btn ${i === f ? 'active' : ''}" data-f="${i}">${esc(t)}</button>`).join('')}</div>
+          <div class="v-tabs"><span class="v-badge" style="color:${badge[1]};border-color:${badge[1]}">${badge[0]}</span><button type="button" class="v-btn" data-d="-1" ${f === 0 ? 'disabled' : ''}>Prev</button><button type="button" class="v-btn" data-d="1" ${f === 3 ? 'disabled' : ''}>Next</button></div>
+        </div>
+        <div class="v-grid">
+          <div class="v-card v-stack">
+            <div class="v-meta"><strong>Try human decision (Frames 3–4):</strong></div>
+            <div class="v-tabs">
+              <button type="button" class="v-btn ${ch === 'approve' ? 'active' : ''}" data-k="approve">Approve ($120)</button>
+              <button type="button" class="v-btn ${ch === 'edit' ? 'active' : ''}" data-k="edit">Edit ($50)</button>
+              <button type="button" class="v-btn ${ch === 'reject' ? 'active' : ''}" data-k="reject">Reject</button>
+            </div>
+            <div class="v-muted" style="margin-top:6px"><strong>Critical rule:</strong> On resume, LangGraph re-runs the paused tool/node from its top line—always put side effects <em>after</em> <code>interrupt()</code>.</div>
+          </div>
+          <div class="v-code" style="white-space:pre-wrap">${esc(payload)}</div>
+        </div>
+        <div class="v-foot">${foot}</div>`;
+      root.querySelectorAll('[data-f]').forEach(b => b.addEventListener('click', () => { f = Number(b.dataset.f); render(); }));
+      root.querySelectorAll('[data-d]').forEach(b => b.addEventListener('click', () => { f = Math.max(0, Math.min(3, f + Number(b.dataset.d))); render(); }));
+      root.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => { ch = b.dataset.k; if (f < 2) f = 2; render(); }));
+    }
+    render();
+  }
+
   const registry = {
     'rag-embedding-plot': mountEmbeddingPlot,
     'rag-two-table-retriever': mountTwoTableRetriever,
     'rag-cosine-cone': mountCosineCone,
-    'rag-code-flow': mountCodeFlow
+    'rag-code-flow': mountCodeFlow,
+    'persistence-checkpoints': mountPersistenceCheckpoints,
+    'persistence-time-travel': mountTimeTravel,
+    'streaming-modes': mountStreamingModes,
+    'hitl-vs-input': mountHitlVsInput,
+    'hitl-pause-resume': mountHitlPauseResume
   };
 
   document.querySelectorAll('.visual-box[data-visual]').forEach(el => {

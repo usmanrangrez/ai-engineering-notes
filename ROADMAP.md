@@ -3,10 +3,10 @@
 Follow DSwithBappy’s course order as the backbone, insert prerequisites where needed, and audit anything the original syllabus leaves uncovered. Do not restart completed lessons.
 
 ## Current checkpoint
-Completed: Tool calling, ReAct loop, and RAG in LangGraph (DSwithBappy Video 20 / Part 8). Next: redo **Persistence (#26)** properly (checkpointers, SQLite, replay, checkpoint editing), then move to **Human-in-the-Loop** (Video 21 / Part 9 / `#28`). Evaluation datasets and a local evaluator were introduced; no full experiment has been run. UI work is deferred until project integration.
+Completed: Chatbot Parts 1–9 through Tool calling, ReAct loop, RAG in LangGraph (Part 8), Human-in-the-Loop (Part 9 / `#28`), Persistence (`#26` redo), and Streaming (`#27` refresh). Active next: build an **integrated resume-worthy portfolio project** combining all studied concepts and **deploy it** (Videos 22–23: Docker, GitHub Actions, AWS, Render).
 
 ## Original 18-topic checklist
-11 of 18 original topics are complete (with `#26` Persistence marked undone for a proper redo, `#33` core tracing done, and `#34` separate threads done). This is not completion of the larger combined roadmap.
+13 of 18 original topics are complete (with `#33` core tracing done and `#34` separate threads done). This is not completion of the larger combined roadmap.
 
 | Original topic | Scope | Status |
 | --- | --- | --- |
@@ -18,9 +18,9 @@ Completed: Tool calling, ReAct loop, and RAG in LangGraph (DSwithBappy Video 20 
 | 23 | Conditional workflow and bounded loops | Complete |
 | 24 | Parallel workflow | Complete |
 | 25 | Iterative workflow | Complete |
-| 26 | Persistence and checkpointers | Undone — redo next before HITL |
-| 27 | Streaming | Complete |
-| 28 | Human-in-the-loop | Planned (after Persistence redo) |
+| 26 | Persistence and checkpointers | Complete (redone hands-on) |
+| 27 | Streaming | Complete (refreshed hands-on) |
+| 28 | Human-in-the-loop | Complete |
 | 29 | Subgraphs | Planned |
 | 30 | Send / map-reduce | Planned |
 | 31 | Tool calling as a graph | Complete |
@@ -30,9 +30,11 @@ Completed: Tool calling, ReAct loop, and RAG in LangGraph (DSwithBappy Video 20 
 | 35 | Recruitment capstone | Planned |
 
 ## Immediate learning order
-1. Redo Persistence properly (checkpointers, SQLite, replay, checkpoint editing — Chapters 12–15).
-2. Human-in-the-loop interrupts, approval, rejection, and edit/resume (Video 21 / Part 9).
-3. Integrate the support agent, add meaningful evaluation checks, and deploy (Docker, AWS, GitHub Actions, Render).
+1. **Now:** Build one real resume-worthy end-to-end project combining RAG, tools, SQLite persistence, streaming, multi-thread management, LangSmith tracing, and HITL (Chapter 25).
+2. **Next:** Deploy the integrated project (Videos 22–23: Docker, GitHub Actions, AWS, Render).
+3. **Remaining Core LangGraph:** `#29` Subgraphs, `#30` `Send`/map-reduce, `#34` shared long-term memory (`user_id` / store).
+4. **Backend, MCP, Guardrails & Multi-Agent:** FastAPI + PostgreSQL, MCP fundamentals & integration, Guardrails, Supervisor/multi-agent orchestration.
+5. **Production & Capstone:** Systematic AI evaluation (hosted LangSmith eval), harness/production loops & ops, `#35` Recruitment Capstone, then optional extensions.
 
 ## Later playlist and original-syllabus coverage
 FastAPI/PostgreSQL and project architecture; TripMate; MCP fundamentals and application; subgraphs; Send/map-reduce; AgentWriter; guardrails; supervisor patterns; harness/loop engineering; long-term memory; full evaluation experiments; gateways; Corrective RAG; Self-RAG; further project/deployment studies; agentic RAG; FDE delivery; CloudOps; GraphRAG; multimodal RAG; production RAG; voice/vision; Bedrock; production operations; recruitment capstone.

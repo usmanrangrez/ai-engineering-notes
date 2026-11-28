@@ -196,6 +196,19 @@ The second process recovered both messages. The receipt proves persistence for t
 ## In production
 SQLite is suitable for these local synchronous labs. Choose a persistent backend appropriate for concurrency, operations, backup, and hosting requirements. JSON conversation metadata and checkpoint data are separate concerns even if both eventually live in PostgreSQL.
 
+## Updated redo receipt (2026-11-28: `30_persistence_sqlite.py`)
+Running `uv run 30_persistence_sqlite.py` across **two separate Python processes** with `SqliteSaver.from_conn_string(...)` confirmed disk survival with zero nodes executed on the second run:
+```text
+# Process 1
+NOTHING SAVED YET -> running graph and saving to SQLite...
+-> RUNNING classify
+-> RUNNING draft_reply
+SAVED RESULT: {'ticket': 'Order ORD-42 is late', 'category': 'delivery', 'reply': 'Handling delivery request for: Order ORD-42 is late'}
+
+# Process 2 (fresh Python process)
+LOADED FROM SQLITE (0 nodes ran!): {'ticket': 'Order ORD-42 is late', 'category': 'delivery', 'reply': 'Handling delivery request for: Order ORD-42 is late'}
+```
+
 ## Interview questions
 ::: question Does the checkpointer remember a function's local variables?
 No. It saves graph state and execution/checkpoint information, not a suspended Python call stack.
